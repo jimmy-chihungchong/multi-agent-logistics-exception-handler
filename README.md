@@ -62,6 +62,7 @@ graph TD;
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc
 ```
+_Solid arrows are fixed transitions; dashed arrows are conditional routes chosen by the orchestrator at runtime._
 
 ### The Agents
 
