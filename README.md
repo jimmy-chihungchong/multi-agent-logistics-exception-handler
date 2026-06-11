@@ -155,7 +155,7 @@ Being honest about scope is a feature, not a bug:
 
 Built by **Jimmy Chong** — software engineer with 10+ years of IT experience, specializing in AI agent development for business automation.
 
-- 💼 LinkedIn: <!-- TODO: paste your LinkedIn profile URL -->
+- 💼 LinkedIn: https://www.linkedin.com/in/chi-hung-chong-465144a1
 - 🐙 GitHub: [@jimmy-chihungchong](https://github.com/jimmy-chihungchong)
 
 ## 📄 License
