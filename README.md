@@ -19,10 +19,10 @@ Last-mile delivery is the most expensive and failure-prone leg of the logistics 
 
 This project replaces that manual triage loop with a **team of specialized AI agents** that collaborate to handle delivery exceptions end-to-end:
 
-1. An exception is detected and classified
-2. The right specialist agent investigates and gathers context
-3. A resolution is proposed (reschedule, reroute, refund, escalate, etc.)
-4. Stakeholders are notified — with human escalation only when needed
+1. A **preprocessor** validates the event, blocks malicious input, filters routine noise, and fetches all context (customer profile, locker availability, playbook) — before a single LLM call is made
+2. A **Resolution Agent** consults the playbook and decides the fix; a **Critic Agent** reviews the decision and can approve, demand revision, or escalate
+3. A **Communication Agent** drafts a personalized customer message in the right tone; a second critic validates it for tone, accuracy, and data leakage before send
+4. A deterministic **orchestrator** routes every step and enforces escalation rules — humans only see cases that genuinely need judgment
 
 The result: routine exceptions get resolved in seconds without human intervention, and humans only see the cases that genuinely need judgment.
 
@@ -30,27 +30,25 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 ## 🏗️ Architecture
 
-<!-- TODO: Draw your agent graph at https://excalidraw.com, export as PNG, upload to a /docs folder in the repo, then uncomment the line below -->
+<!-- TODO: Add the agent graph diagram — either export a PNG from https://excalidraw.com into /docs and uncomment the line below, or paste LangGraph's Mermaid output (graph.get_graph().draw_mermaid()) into a ```mermaid block here -->
 <!-- ![Architecture Diagram](docs/architecture.png) -->
 
 ### The Agents
 
-<!-- TODO: Edit this table to match your actual agents — names, roles, and tools -->
-
 | Agent | Role | Tools / Capabilities |
 |---|---|---|
-| 🛠️ **Resolution Agent** | It reads the situation, consults the playbook, and decides what to do — and if it cannot produce a valid answer after 3 tries, it escalates to a human rather than making a potentially wrong decision. | It receives pre-processed information through its **`ResolutionAgentView`** which includes: `consolidated_event`, `customer_profile`, `locker_availability`, `playbook_context`, `escalation_signals`, and `critic_feedback` |
-| 📣 **Communication Agent** | Reads the resolution decision and the customer's profile, then drafts a personalized message in the right tone for that customer — and if it cannot produce a proper message after 3 tries, it sends a generic fallback and flags the case for human review. | It operates on a restricted view of the state called **`CommunicationAgentView`**. This view is populated by the `preprocessor_node` with the results of previous tool calls: `customer_profile_full` (contains customer's full name), and `locker_availability`|
-| 🔍 **Critic Resolution Agent** | It reviews the **Resolution Agent's** decision against the playbook and context, and either approves it, sends it back for correction, or escalates it to a human supervisor if the situation is too complex or risky to handle automatically. | It receives a data view called **`CriticResolutionView`**, which contains: `consolidated_event`, `customer_profile`, `locker_availability`, `playbook_context`, `escalation_signals`, and `resolution_output` |
-| 🔍 **Critic Communication Agent** | It checks that the customer message has the right tone, accurately reflects the resolution, and contains no sensitive internal details before it is sent. Unlike the **Critic Resolution Agent**, it cannot request a revision — it can only approve or escalate. | It is a validation node that operates on a specific subset of the system state called the **`CriticCommunicationView`**, which includes: `consolidated_event`, `customer_profile`, `resolution_output`, and `communication_output` |
+| 🛠️ **Resolution Agent** | It reads the situation, consults the playbook, and decides what to do — and if it cannot produce a valid answer after 3 tries, it escalates to a human rather than making a potentially wrong decision. | Operates on a restricted state view, **`ResolutionAgentView`**, which includes: `consolidated_event`, `customer_profile`, `locker_availability`, `playbook_context`, `escalation_signals`, and `critic_feedback` |
+| 📣 **Communication Agent** | It reads the resolution decision and the customer's profile, then drafts a personalized message in the right tone for that customer — and if it cannot produce a proper message after 3 tries, it sends a generic fallback and flags the case for human review. | Operates on a restricted state view, **`CommunicationAgentView`**. This view is populated by the `preprocessor_node` with the results of previous tool calls: `customer_profile_full` (contains customer's full name), and `locker_availability` |
+| ⚖️ **Critic Resolution Agent** | It reviews the **Resolution Agent's** decision against the playbook and context, and either approves it, sends it back for correction, or escalates it to a human supervisor if the situation is too complex or risky to handle automatically. | Operates on a restricted state view, **`CriticResolutionView`**, which contains: `consolidated_event`, `customer_profile`, `locker_availability`, `playbook_context`, `escalation_signals`, and `resolution_output` |
+| 🛡️ **Critic Communication Agent** | It checks that the customer message has the right tone, accurately reflects the resolution, and contains no sensitive internal details before it is sent. Unlike the **Critic Resolution Agent**, it cannot request a revision — it can only approve or escalate. | Operates on a restricted state view, **`CriticCommunicationView`**, which includes: `consolidated_event`, `customer_profile`, `resolution_output`, and `communication_output` |
 
 ### Non-LLM Nodes
 
 | Node | Role | Tools / Capabilities |
 |---|---|---|
-| 🧭 **Preprocessor** | It cleans the data, blocks malicious inputs, filters out routine noise, and fetches everything the agents need, all before a single LLM call is made. | The following tools are available to and invoked by the preprocessor: `lookup_customer_profile`, `check_locker_availability`, and `search_playbook` |
-| 🪄 **Orchestrator** | It looks at the current state of the whiteboard **UnifiedAgentState** and decides who should act next, ensuring the pipeline always follows the correct sequence, enforces escalation rules, and never skips a critical validation step. | It does not directly invoke external tools like the preprocessor does. Instead, it serves as the **deterministic central router** of the system. Its _"tools"_ are actually the state variables it evaluates to decide the next path: **Guardrail State**, **Noise Flags**, **Completion Logic**, **Loop Management**, and **Escalation Enforcement**. While the preprocessor handles data retrieval, the orchestrator handles **policy enforcement and flow control.** |
-| 📦 **Finalize** | It collects all the work done by every agent, packages it into one clean, auditable record, stamps the total processing time, and closes the case. | This node does not invoke any external tools or internal agent nodes. Its function is purely administrative within the graph: it reads the state (using the `RouterView` projection), packages the final results into a structured dictionary for the user, calculates the total end-to-end latency, and appends a final log entry to the `trajectory_log`. Once it completes, it transitions the workflow to the `END` state. |
+| 🧭 **Preprocessor** | It cleans the data, blocks malicious inputs, filters out routine noise, and fetches everything the agents need, all before a single LLM call is made. | Invokes the system's external tools: `lookup_customer_profile`, `check_locker_availability`, and `search_playbook` |
+| 🪄 **Orchestrator** | It looks at the current state of the shared **`UnifiedAgentState`** (the system's whiteboard) and decides who should act next, ensuring the pipeline always follows the correct sequence, enforces escalation rules, and never skips a critical validation step. | Does not directly invoke external tools like the preprocessor does. Instead, it serves as the **deterministic central router** of the system. Its _"tools"_ are the state variables it evaluates to decide the next path: **Guardrail State**, **Noise Flags**, **Completion Logic**, **Loop Management**, and **Escalation Enforcement**. While the preprocessor handles data retrieval, the orchestrator handles **policy enforcement and flow control.** |
+| 📦 **Finalize** | It collects all the work done by every agent, packages it into one clean, auditable record, stamps the total processing time, and closes the case. | Does not invoke any external tools or internal agent nodes. Its function is purely administrative within the graph: it reads the state (using the `RouterView` projection), packages the final results into a structured dictionary for the user, calculates the total end-to-end latency, and appends a final log entry to the `trajectory_log`. Once it completes, it transitions the workflow to the `END` state. |
 
 ### Why LangGraph?
 
@@ -63,7 +61,8 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 ## 🎬 Example Run
 
-_"This example shows the escalation path: a VIP customer with repeated exceptions triggers a business rule that overrides automatic resolution and routes the case to human review."_:
+This example shows the escalation path: a VIP customer with repeated exceptions triggers a business rule that overrides automatic resolution and routes the case to human review.
+
 ```
 📥 EXCEPTION RECEIVED
    Delivery attempt failed — VIP customer not home (Shipment #SHP-002)
@@ -90,7 +89,7 @@ _"This example shows the escalation path: a VIP customer with repeated exception
     for any inconvenience caused. Thank you for your
     understanding."
 
-✅ RESOLVED — escalated to human review per VIP policy
+✅ CASE CLOSED — escalated to human review per VIP policy
 ```
 
 Full scenarios with complete saved outputs are demonstrated in [the notebook](logistics_agents.ipynb).
