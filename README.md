@@ -63,21 +63,34 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 ## 🎬 Example Run
 
-Here's the system handling a real exception end-to-end:
-
-<!-- TODO: Replace the block below with a real (lightly trimmed) execution trace copied from logistics_agents.ipynb — this is the section reviewers read most -->
-
+_"This example shows the escalation path: a VIP customer with repeated exceptions triggers a business rule that overrides automatic resolution and routes the case to human review."_:
 ```
-📥 EXCEPTION RECEIVED: Delivery attempt failed — customer not home (Order #48291)
+📥 EXCEPTION RECEIVED
+   Delivery attempt failed — VIP customer not home (Shipment #SHP-002)
 
-[Triage Agent]        → Classified: FAILED_DELIVERY / severity: LOW
-[Investigation Agent] → Customer has delivery window preference: evenings.
-                        Package: non-perishable. 2 attempts remaining.
-[Resolution Agent]    → Decision: Reschedule to next evening window (no human needed)
-[Communication Agent] → Drafted SMS: "Hi! We missed you today. Your package
-                        is rescheduled for tomorrow between 6–8 PM..."
+[Orchestrator]   → Forced escalation from rule engine:
+                   "AUTOMATIC: VIP customer with 5 exceptions in 90d (>=3)"
 
-✅ RESOLVED — no human escalation required
+─────────────────── FINALIZED ACTIONS ───────────────────
+
+   Shipment ID   : SHP-002
+   Is Exception  : YES
+   Resolution    : RESCHEDULE
+   Escalated     : TRUE  (routed to human review)
+   Tone          : FORMAL
+
+[Communication]  → Drafted customer message:
+
+   "Dear John Smith, We regret to inform you that your recent
+    delivery could not be completed after two attempts. We have
+    initiated a re-delivery attempt for the next business day.
+    Please confirm that you will be available to receive your
+    package at that time. Additionally, your active credit
+    balance of $15.00 has been noted as a gesture of goodwill
+    for any inconvenience caused. Thank you for your
+    understanding."
+
+✅ RESOLVED — escalated to human review per VIP policy
 ```
 
 Full scenarios with complete saved outputs are demonstrated in [the notebook](logistics_agents.ipynb).
