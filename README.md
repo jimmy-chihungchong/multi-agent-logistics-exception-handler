@@ -30,8 +30,38 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 ## 🏗️ Architecture
 
-<!-- TODO: Add the agent graph diagram — either export a PNG from https://excalidraw.com into /docs and uncomment the line below, or paste LangGraph's Mermaid output (graph.get_graph().draw_mermaid()) into a ```mermaid block here -->
-<!-- ![Architecture Diagram](docs/architecture.png) -->
+```mermaid
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	preprocessor(preprocessor)
+	orchestrator(orchestrator)
+	resolution_agent(resolution_agent)
+	critic_resolution(critic_resolution)
+	communication_agent(communication_agent)
+	critic_communication(critic_communication)
+	finalize(finalize)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> preprocessor;
+	communication_agent --> orchestrator;
+	critic_communication --> orchestrator;
+	critic_resolution --> orchestrator;
+	orchestrator -.-> communication_agent;
+	orchestrator -.-> critic_communication;
+	orchestrator -.-> critic_resolution;
+	orchestrator -.-> finalize;
+	orchestrator -.-> resolution_agent;
+	preprocessor --> orchestrator;
+	resolution_agent --> orchestrator;
+	finalize --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+```
 
 ### The Agents
 
