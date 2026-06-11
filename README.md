@@ -39,11 +39,10 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 | Agent | Role | Tools / Capabilities |
 |---|---|---|
-| 🧭 **Supervisor / Orchestrator** | Routes each exception to the right specialist and manages the overall workflow | LangGraph state graph, conditional routing |
-| 🔍 **Triage Agent** | Classifies the exception type and severity from raw event data | Classification prompt, structured output |
-| 📦 **Investigation Agent** | Pulls order, customer, and shipment context to understand what happened | Mock order/customer lookups |
-| 🛠️ **Resolution Agent** | Decides and executes the fix: reschedule, reroute, refund, redeliver | Policy-guided decision prompts |
-| 📣 **Communication Agent** | Drafts customer/driver notifications about the outcome | Notification drafting |
+| 🛠️ **Resolution Agent** | It reads the situation, consults the playbook, and decides what to do — and if it cannot produce a valid answer after 3 tries, it escalates to a human rather than making a potentially wrong decision. | It receives pre-processed information through its **`ResolutionAgentView`** which includes: `consolidated_event`, `customer_profile`, `locker_availability`, `playbook_context`, `escalation_signals`, and `critic_feedback` |
+| 📣 **Communication Agent** | Reads the resolution decision and the customer's profile, then drafts a personalized message in the right tone for that customer — and if it cannot produce a proper message after 3 tries, it sends a generic fallback and flags the case for human review. | It operates on a restricted view of the state called **`CommunicationAgentView`**. This view is populated by the `preprocessor_node` with the results of previous tool calls: `customer_profile_full` (contains customer's full name), and `locker_availability`|
+| 🔍 **Critic Resolution Agent** | It reviews the **Resolution Agent's** decision against the playbook and context, and either approves it, sends it back for correction, or escalates it to a human supervisor if the situation is too complex or risky to handle automatically. | It receives a data view called **`CriticResolutionView`**, which contains: `consolidated_event`, `customer_profile`, `locker_availability`, `playbook_context`, `escalation_signals`, and `resolution_output` |
+| 🔍 **Critic Communication Agent** | It checks that the customer message has the right tone, accurately reflects the resolution, and contains no sensitive internal details before it is sent. Unlike the **Critic Resolution Agent**, it cannot request a revision — it can only approve or escalate. | It is a validation node that operates on a specific subset of the system state called the **`CriticCommunicationView`**, which includes: `consolidated_event`, `customer_profile`, `resolution_output`, and `communication_output` |
 
 ### Non-LLM Nodes
 
