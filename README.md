@@ -45,6 +45,14 @@ The result: routine exceptions get resolved in seconds without human interventio
 | 🛠️ **Resolution Agent** | Decides and executes the fix: reschedule, reroute, refund, redeliver | Policy-guided decision prompts |
 | 📣 **Communication Agent** | Drafts customer/driver notifications about the outcome | Notification drafting |
 
+### Non-LLM Nodes
+
+| Node | Role | Tools / Capabilities |
+|---|---|---|
+| 🧭 **Preprocessor** | Routes each exception to the right specialist and manages the overall workflow | LangGraph state graph, conditional routing |
+| 🔍 **Orchestrator** | Classifies the exception type and severity from raw event data | Classification prompt, structured output |
+| 📦 **Finalize** | Pulls order, customer, and shipment context to understand what happened | Mock order/customer lookups |
+
 ### Why LangGraph?
 
 - **Stateful graph workflow** — exception handling is a branching process, not a linear chain; LangGraph's state machine model fits naturally
@@ -134,7 +142,7 @@ Being honest about scope is a feature, not a bug:
 
 ## 👤 About
 
-Built by **Jimmy Chi Hung Chong** — software engineer with 10+ years of IT experience, specializing in AI agent development for business automation.
+Built by **Jimmy Chong** — software engineer with 10+ years of IT experience, specializing in AI agent development for business automation.
 
 - 💼 LinkedIn: <!-- TODO: paste your LinkedIn profile URL -->
 - 🐙 GitHub: [@jimmy-chihungchong](https://github.com/jimmy-chihungchong)
