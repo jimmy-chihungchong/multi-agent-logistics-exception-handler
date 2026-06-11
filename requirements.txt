@@ -1,0 +1,14 @@
+langchain==1.2.10
+langchain-chroma==1.1.0
+langchain-classic==1.0.8
+langchain-community==0.4.1
+langchain-core==1.4.6
+langchain-huggingface==1.2.0
+langchain-openai==1.1.10
+langchain-protocol==0.0.16
+langchain-text-splitters==1.1.2
+langgraph==1.0.8
+langgraph-checkpoint==4.1.1
+langgraph-prebuilt==1.0.13
+langgraph-sdk==0.3.15
+openai==2.21.0
