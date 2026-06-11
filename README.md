@@ -2,7 +2,7 @@
 
 An AI-powered multi-agent system that autonomously detects, triages, and resolves last-mile delivery exceptions — built with LangGraph and OpenAI.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/YOUR_REPO/blob/main/YOUR_NOTEBOOK.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jimmy-chihungchong/multi-agent-logistics-exception-handler/blob/main/logistics_agents.ipynb)
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
 ![LangGraph](https://img.shields.io/badge/LangGraph-framework-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -14,8 +14,6 @@ An AI-powered multi-agent system that autonomously detects, triages, and resolve
 ## 📌 The Problem
 
 Last-mile delivery is the most expensive and failure-prone leg of the logistics chain. When something goes wrong — a customer isn't home, an address is invalid, a package is damaged, weather blocks a route — human dispatchers must manually investigate each "exception," contact stakeholders, and decide on a resolution. This is slow, costly, and doesn't scale.
-
-<!-- TODO: Add 1–2 sentences with any stats or framing you used in your capstone, e.g. "Failed first-attempt deliveries cost carriers an estimated $X per package." -->
 
 ## 💡 The Solution
 
@@ -32,8 +30,8 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 ## 🏗️ Architecture
 
-<!-- TODO: Replace with your actual diagram. Draw it free in the browser at https://excalidraw.com or https://app.diagrams.net, export as PNG, and upload to the repo (e.g. /docs/architecture.png) -->
-![Architecture Diagram](docs/architecture.png)
+<!-- TODO: Draw your agent graph at https://excalidraw.com, export as PNG, upload to a /docs folder in the repo, then uncomment the line below -->
+<!-- ![Architecture Diagram](docs/architecture.png) -->
 
 ### The Agents
 
@@ -43,13 +41,12 @@ The result: routine exceptions get resolved in seconds without human interventio
 |---|---|---|
 | 🧭 **Supervisor / Orchestrator** | Routes each exception to the right specialist and manages the overall workflow | LangGraph state graph, conditional routing |
 | 🔍 **Triage Agent** | Classifies the exception type and severity from raw event data | Classification prompt, structured output |
-| 📦 **Investigation Agent** | Pulls order, customer, and shipment context to understand what happened | <!-- e.g. mock order DB lookup, tracking API --> |
-| 🛠️ **Resolution Agent** | Decides and executes the fix: reschedule, reroute, refund, redeliver | <!-- e.g. policy rules, action tools --> |
-| 📣 **Communication Agent** | Drafts customer/driver notifications about the outcome | <!-- e.g. email/SMS template generation --> |
+| 📦 **Investigation Agent** | Pulls order, customer, and shipment context to understand what happened | Mock order/customer lookups |
+| 🛠️ **Resolution Agent** | Decides and executes the fix: reschedule, reroute, refund, redeliver | Policy-guided decision prompts |
+| 📣 **Communication Agent** | Drafts customer/driver notifications about the outcome | Notification drafting |
 
 ### Why LangGraph?
 
-<!-- TODO: Keep/edit the reasons that actually drove your choice -->
 - **Stateful graph workflow** — exception handling is a branching process, not a linear chain; LangGraph's state machine model fits naturally
 - **Conditional routing** — different exception types take different paths through the agent team
 - **Human-in-the-loop support** — low-confidence or high-value cases can pause for human approval
@@ -61,7 +58,7 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 Here's the system handling a real exception end-to-end:
 
-<!-- TODO: Paste a (lightly trimmed) actual execution trace from your notebook. This section is what reviewers read most — a real trace is far more convincing than a description. Example shape below: -->
+<!-- TODO: Replace the block below with a real (lightly trimmed) execution trace copied from logistics_agents.ipynb — this is the section reviewers read most -->
 
 ```
 📥 EXCEPTION RECEIVED: Delivery attempt failed — customer not home (Order #48291)
@@ -73,10 +70,10 @@ Here's the system handling a real exception end-to-end:
 [Communication Agent] → Drafted SMS: "Hi! We missed you today. Your package
                         is rescheduled for tomorrow between 6–8 PM..."
 
-✅ RESOLVED in 14.2s — no human escalation required
+✅ RESOLVED — no human escalation required
 ```
 
-More scenarios (damaged package, invalid address, weather delay) are demonstrated in the notebook with full saved outputs.
+Full scenarios with complete saved outputs are demonstrated in [the notebook](logistics_agents.ipynb).
 
 ---
 
@@ -93,40 +90,33 @@ No setup required:
 ### Option 2 — Run locally
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/jimmy-chihungchong/multi-agent-logistics-exception-handler.git
+cd multi-agent-logistics-exception-handler
 pip install -r requirements.txt
 export OPENAI_API_KEY="sk-..."
-jupyter notebook YOUR_NOTEBOOK.ipynb
+jupyter notebook logistics_agents.ipynb
 ```
-
-<!-- TODO: Create requirements.txt — in Colab, run `!pip freeze | grep -iE "langchain|langgraph|openai"` to capture the key pinned versions -->
 
 ---
 
 ## 🧰 Tech Stack
 
-<!-- TODO: Adjust versions/components to match your project -->
 - **Python 3.10+**
 - **LangGraph** — multi-agent orchestration and state management
 - **LangChain** — LLM integration, tools, and prompts
-- **OpenAI API** — agent reasoning (GPT-4o / GPT-4o-mini)
+- **OpenAI API** — agent reasoning
 - **Jupyter / Google Colab** — development and demo environment
 
 ---
 
 ## 📂 Repository Structure
 
-<!-- TODO: Match this to your actual files -->
 ```
 .
 ├── README.md
-├── requirements.txt
-├── logistics_agents.ipynb      # Main notebook — runnable demo with saved outputs
-├── docs/
-│   └── architecture.png        # System architecture diagram
-└── data/
-    └── sample_exceptions.json  # Mock exception events used in demos
+├── LICENSE
+├── requirements.txt            # Pinned dependencies
+└── logistics_agents.ipynb      # Main notebook — runnable demo with saved outputs
 ```
 
 ---
@@ -135,7 +125,6 @@ jupyter notebook YOUR_NOTEBOOK.ipynb
 
 Being honest about scope is a feature, not a bug:
 
-<!-- TODO: Edit to reflect reality — this section signals engineering maturity -->
 - Order/customer data is **mocked** — production use would integrate real OMS/TMS/carrier APIs
 - No persistent memory across sessions; each exception is handled statelessly
 - Resolution policies are prompt-encoded; a production system would externalize them as configurable business rules
@@ -145,11 +134,10 @@ Being honest about scope is a feature, not a bug:
 
 ## 👤 About
 
-Built by **Jimmy [LAST NAME]** — software engineer with 10+ years of IT experience, specializing in AI agent development for business automation.
+Built by **Jimmy Chi Hung Chong** — software engineer with 10+ years of IT experience, specializing in AI agent development for business automation.
 
-- 💼 LinkedIn: [your-linkedin-url]
-- 🐙 GitHub: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME)
-<!-- Optional: 📧 email, 🌐 portfolio site -->
+- 💼 LinkedIn: <!-- TODO: paste your LinkedIn profile URL -->
+- 🐙 GitHub: [@jimmy-chihungchong](https://github.com/jimmy-chihungchong)
 
 ## 📄 License
 
