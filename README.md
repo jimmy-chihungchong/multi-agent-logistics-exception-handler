@@ -48,9 +48,9 @@ The result: routine exceptions get resolved in seconds without human interventio
 
 | Node | Role | Tools / Capabilities |
 |---|---|---|
-| 🧭 **Preprocessor** | Routes each exception to the right specialist and manages the overall workflow | LangGraph state graph, conditional routing |
-| 🔍 **Orchestrator** | Classifies the exception type and severity from raw event data | Classification prompt, structured output |
-| 📦 **Finalize** | Pulls order, customer, and shipment context to understand what happened | Mock order/customer lookups |
+| 🧭 **Preprocessor** | It cleans the data, blocks malicious inputs, filters out routine noise, and fetches everything the agents need, all before a single LLM call is made. | The following tools are available to and invoked by the preprocessor: `lookup_customer_profile`, `check_locker_availability`, and `search_playbook` |
+| 🪄 **Orchestrator** | It looks at the current state of the whiteboard **UnifiedAgentState** and decides who should act next, ensuring the pipeline always follows the correct sequence, enforces escalation rules, and never skips a critical validation step. | It does not directly invoke external tools like the preprocessor does. Instead, it serves as the **deterministic central router** of the system. Its _"tools"_ are actually the state variables it evaluates to decide the next path: **Guardrail State**, **Noise Flags**, **Completion Logic**, **Loop Management**, and **Escalation Enforcement**. While the preprocessor handles data retrieval, the orchestrator handles **policy enforcement and flow control.** |
+| 📦 **Finalize** | It collects all the work done by every agent, packages it into one clean, auditable record, stamps the total processing time, and closes the case. | This node does not invoke any external tools or internal agent nodes. Its function is purely administrative within the graph: it reads the state (using the `RouterView` projection), packages the final results into a structured dictionary for the user, calculates the total end-to-end latency, and appends a final log entry to the `trajectory_log`. Once it completes, it transitions the workflow to the `END` state. |
 
 ### Why LangGraph?
 
